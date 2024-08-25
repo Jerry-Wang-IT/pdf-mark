@@ -33,6 +33,26 @@ export default {
       this.pdfDoc = pdfDoc_;
       this.renderPage(this.pageNum);
     })
+    // canvas 监听画线
+    this.canvas.addEventListener('mousedown', (e) => {
+      let isDrawing = true;
+      this.ctx.beginPath();
+      this.ctx.moveTo(e.offsetX, e.offsetY);
+      this.canvas.addEventListener('mousemove', (e) => {
+        if (isDrawing) {
+          this.ctx.lineTo(e.offsetX, e.offsetY);
+          this.ctx.stroke();
+        }
+      })
+      this.canvas.addEventListener('mouseup', () => {
+        isDrawing = false;
+
+      })
+      this.canvas.addEventListener('mouseout', () => {
+        isDrawing = false;
+      })
+    })
+
   },
   methods: {
     renderPage(num) {
