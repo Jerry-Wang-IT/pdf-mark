@@ -1,7 +1,7 @@
 <template>
   <div id="app">
    <div id="pdf-viewer">
-    <canvas ref ="pdfCanvas"></canvas>
+    <div id="paf-wrapper"></div>
    </div>
   </div>
 </template>
@@ -22,50 +22,57 @@ export default {
       pageRendering: false,
       pageNumPending: null,
       scale: 1,
-      canvas: null,
-      ctx: null
     }
   },
   mounted() {
-    this.canvas = this.$refs.pdfCanvas;
-    this.ctx = this.canvas.getContext('2d');
     pdfjsLib.getDocument('https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf').promise.then(pdfDoc_ => {
       this.pdfDoc = pdfDoc_;
-      this.renderPage(this.pageNum);
+      let pagesCount = this.pdfDoc.numPages;
+      for (let i = 1; i <= pagesCount; i++) {
+        this.renderPage(i);
+      }
     })
     // canvas 监听画线
-    this.canvas.addEventListener('mousedown', (e) => {
-      let isDrawing = true;
-      this.ctx.beginPath();
-      this.ctx.moveTo(e.offsetX, e.offsetY);
-      this.canvas.addEventListener('mousemove', (e) => {
-        if (isDrawing) {
-          this.ctx.lineTo(e.offsetX, e.offsetY);
-          this.ctx.stroke();
-        }
-      })
-      this.canvas.addEventListener('mouseup', () => {
-        isDrawing = false;
+    // this.canvas.addEventListener('mousedown', (e) => {
+    //   let isDrawing = true;
+    //   this.ctx.beginPath();
+    //   this.ctx.moveTo(e.offsetX, e.offsetY);
+    //   this.canvas.addEventListener('mousemove', (e) => {
+    //     if (isDrawing) {
+    //       this.ctx.lineTo(e.offsetX, e.offsetY);
+    //       this.ctx.stroke();
+    //     }
+    //   })
+    //   this.canvas.addEventListener('mouseup', () => {
+    //     isDrawing = false;
 
-      })
-      this.canvas.addEventListener('mouseout', () => {
-        isDrawing = false;
-      })
-    })
+    //   })
+    //   this.canvas.addEventListener('mouseout', () => {
+    //     isDrawing = false;
+    //   })
+    // })
 
   },
   methods: {
     renderPage(num) {
       this.pageRendering = true;
+      let pafWrapper = document.getElementById('paf-wrapper'); // #paf-wrapper
+      let canvasId = 'canvas' + num;
+     
       // Using promise to fetch the page
       this.pdfDoc.getPage(num).then(page => {
-        var viewport = page.getViewport({ scale: this.scale });
+        const viewport = page.getViewport({ scale: this.scale });
+        let viewportWidth =  viewport.height;
+        let viewportHeight =viewport.width;
         // Prepare canvas using PDF page dimensions
-        this.canvas.height = viewport.height;
-        this.canvas.width = viewport.width;
+        let canvas = document.createElement('canvas');
+        let ctx = canvas.getContext('2d');
+        canvas.id = canvasId;
+        canvas.height = viewportWidth;
+        canvas.width = viewportHeight;
         // Render PDF page into canvas context
         var renderContext = {
-          canvasContext: this.ctx,
+          canvasContext:ctx,
           viewport: viewport
         };
         var renderTask = page.render(renderContext);
@@ -78,8 +85,35 @@ export default {
             this.pageNumPending = null;
           }
         });
+        pafWrapper.appendChild(canvas);
+        //为每个canvas添加监听事件
+        this.addCanvasEvent(canvasId);
       });
-    }
+    },
+    // 根据传递页码添加cavas监听时间
+    addCanvasEvent(canvasId) {
+      let canvas = document.getElementById(canvasId);
+      let ctx = canvas.getContext('2d');
+      canvas.addEventListener('mousedown', (e) => {
+        let isDrawing = true;
+        ctx.beginPath();
+        ctx.moveTo(e.offsetX, e.offsetY);
+        canvas.addEventListener('mousemove', (e) => {
+          if (isDrawing) {
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+          }
+        })
+        canvas.addEventListener('mouseup', () => {
+          isDrawing = false;
+        })
+        canvas.addEventListener('mouseout', () => {
+          isDrawing = false;
+        })
+      })
+
+    },
+
   }
   
 }
