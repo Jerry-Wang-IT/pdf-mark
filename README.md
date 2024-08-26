@@ -1,13 +1,22 @@
 # pdf-mark
 
-## Project setup
+## nvm 切换node 版本 v16.20.2
+```
+nvm use 16.20.2
+```
+
+## 安装node_modules
 ```
 npm install
 ```
 
-### Compiles and hot-reloads for development
+### 本地运行
 ```
-npm run serve
+npm run dev
+```
+### 浏览器查看
+```
+http://localhost:8080/
 ```
 
 ### Compiles and minifies for production
